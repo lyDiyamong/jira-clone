@@ -1,0 +1,95 @@
+// This is your Prisma schema file,
+// learn more about it in the docs: https://pris.ly/d/prisma-schema
+
+// Looking for ways to speed up your queries, or scale easily with your serverless or edge functions?
+// Try Prisma Accelerate: https://pris.ly/cli/accelerate-init
+
+generator client {
+    provider = "prisma-client-js"
+}
+
+datasource db {
+    provider = "postgresql"
+    url      = env("DATABASE_URL")
+}
+
+model User {
+    id             String   @id @default(cuid())
+    email          String   @unique
+    name           String?
+    imageUrl       String?
+    clerkUserId    String   @unique
+    createdAt      DateTime @default(now())
+    updatedAt      DateTime @updatedAt
+    createdIssues  Issue[]  @relation("Reporter")
+    assignedIssues Issue[]  @relation("Assignee")
+}
+
+model Issue {
+    id          String        @id @default(cuid())
+    title       String
+    description String?
+    status      IssueStatus
+    order       Int
+    priority    IssuePriority
+    assigneeId  String?
+    reporterId  String
+    sprintId    String?
+    projectId   String
+    createdAt   DateTime      @default(now())
+    updatedAt   DateTime      @updatedAt
+
+    assignee User?   @relation("Assignee", fields: [assigneeId], references: [id])
+    reporter User    @relation("Reporter", fields: [reporterId], references: [id])
+    project  Project @relation(fields: [projectId], references: [id], onDelete: Cascade)
+    sprint   Sprint? @relation(fields: [sprintId], references: [id], onDelete: SetNull)
+
+    @@index([status, order])
+}
+
+model Sprint {
+    id        String       @id @default(cuid())
+    name      String       @unique
+    startDate DateTime
+    endDate   String
+    status    SprintStatus
+    projectId String
+    createdAt DateTime     @default(now())
+    updatedAt DateTime     @updatedAt
+    project   Project      @relation(fields: [projectId], references: [id])
+    Issue     Issue[]
+}
+
+model Project {
+    id             String   @id @default(cuid())
+    name           String
+    key            String
+    description    String?
+    organizationId String
+    createdAt      DateTime @default(now())
+    updatedAt      DateTime @updatedAt
+    Sprint         Sprint[]
+    Issue          Issue[]
+
+    @@unique([organizationId, key])
+}
+
+enum IssueStatus {
+    TODO
+    IN_PROGRESS
+    IN_REVIEW
+    DONE
+}
+
+enum IssuePriority {
+    LOW
+    MEDIUM
+    HIGH
+    URGENT
+}
+
+enum SprintStatus {
+    PLANNED
+    ACTIVE
+    COMPLETED
+}
