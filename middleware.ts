@@ -1,5 +1,5 @@
 import { clerkMiddleware, createRouteMatcher } from "@clerk/nextjs/server";
-import { NextRequest } from "next/server";
+import { NextRequest, NextResponse } from "next/server";
 const isProtectedRoute = createRouteMatcher([
     "/onboarding(.*)",
     "/organization(.*)",
@@ -10,6 +10,16 @@ export default clerkMiddleware((auth, req: NextRequest) => {
     // if user is not logged in and try to access to the protected route
     if (!auth().userId && isProtectedRoute(req)) {
         return auth().redirectToSignIn();
+    }
+    // if user is logged in, not org, not on onboarding, not on homepage
+    if (
+        auth().userId &&
+        !auth().orgId &&
+        req.nextUrl.pathname !== "/onboarding" &&
+        req.nextUrl.pathname !== "/"
+    ) {
+        // redirect to
+        return NextResponse.redirect(new URL("/onboarding", req.url));
     }
 });
 
