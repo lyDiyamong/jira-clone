@@ -1,9 +1,9 @@
-"use server"
+"use server";
 import db from "@/lib/db";
 import { auth, clerkClient } from "@clerk/nextjs/server";
 import { Project } from "@prisma/client";
 
-export async function createProject(data: Project) {
+export async function createProject(data: Project): Promise<Project> {
     const { userId, orgId } = auth();
 
     if (!userId) {
@@ -45,4 +45,66 @@ export async function createProject(data: Project) {
             );
         }
     }
+}
+
+export async function getProjects(orgId: string): Promise<Project[]> {
+    const authResult = auth();
+    if (!authResult || !authResult.userId || !authResult.orgId) {
+        throw new Error("Unauthorized");
+    }
+    const { userId } = authResult;
+
+    if (!userId) {
+        throw new Error("Unauthorized");
+    }
+
+    const user = await db.user.findUnique({
+        where: { clerkUserId: userId },
+    });
+
+    if (!user) {
+        throw new Error("User not found");
+    }
+
+    const projects = await db.project.findMany({
+        where: {
+            organizationId: orgId,
+        },
+        orderBy: { createdAt: "desc" },
+    });
+
+    return projects;
+}
+
+export async function deleteProject(
+    projectId: string
+): Promise<{ success: boolean }> {
+    const authResult = auth();
+    if (!authResult || !authResult.userId || !authResult.orgId) {
+        throw new Error("Unauthorized");
+    }
+    const { userId, orgId, orgRole } = authResult;
+
+    if (!userId) {
+        throw new Error("Unauthorized");
+    }
+
+    if (orgRole !== "org:admin") {
+        throw new Error("Only organization admins can delete projects");
+    }
+
+    const project = await db.project.findUnique({
+        where: { id: projectId },
+    });
+
+    if (!project || project.organizationId !== orgId) {
+        throw new Error(
+            "Project not found or you don't have a permission to delete it"
+        );
+    }
+
+    await db.project.delete({
+        where: { id: projectId },
+    });
+    return { success: true };
 }

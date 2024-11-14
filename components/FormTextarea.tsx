@@ -40,7 +40,7 @@ const FormTextarea: React.FC<FormInputProps> = ({
                 id={name}
                 {...field}
                 placeholder={placeholder}
-                className={`mt-1 block w-full h-28 ${
+                className={`mt-1 block w-full h-28 resize-none ${
                     error ? "border-red-500" : "bg-slate-950"
                 }`}
             />
