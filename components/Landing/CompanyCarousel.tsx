@@ -29,7 +29,10 @@ function CompanyCarousel() {
                 <CarouselContent className="flex gap-5 sm:gap-20 items-center">
                     {companies.map((company: Company) => {
                         return (
-                            <CarouselItem className="basis-1/3 lg:basis-1/6">
+                            <CarouselItem
+                                key={company.name}
+                                className="basis-1/3 lg:basis-1/6"
+                            >
                                 <Image
                                     src={company.path}
                                     alt={company.name}

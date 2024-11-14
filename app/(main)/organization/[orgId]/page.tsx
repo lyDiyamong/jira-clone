@@ -2,9 +2,11 @@ import { getOrganization } from "@/actions/organization";
 import OrgSwitcher from "@/components/OrgSwitcher";
 import React from "react";
 
-const Organization = async ({ params }: { params: { orgId: string } }) => {
-    const { orgId } = params;
-
+const Organization = async ({
+    params: { orgId },
+}: {
+    params: { orgId: string };
+}) => {
     const organization = await getOrganization(orgId);
 
     if (!organization) {
@@ -16,13 +18,14 @@ const Organization = async ({ params }: { params: { orgId: string } }) => {
                 <h1 className="text-5xl font-bold gradient-title pb-2">
                     {organization.name}&lsquo;s Projects
                 </h1>
+                {/* Org switcher */}
+                <OrgSwitcher />
             </div>
-            {/* Org switcher */}
+
             <div className="mb-4">Show org Projects</div>
             <div className="mb-8">
                 Show User assigned and reported issues here
             </div>
-            <OrgSwitcher />
         </div>
     );
 };

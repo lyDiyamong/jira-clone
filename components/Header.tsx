@@ -1,17 +1,19 @@
+// Next import
 import { SignedOut, SignInButton, SignedIn } from "@clerk/nextjs";
 import Image from "next/image";
 import Link from "next/link";
-import React from "react";
+
+// Custom import
 import { Button } from "./ui/button";
 import { PenBox } from "lucide-react";
-import UserMenu from "./UserMenu";
 import { checkUser } from "@/lib/checkUser";
+import UserMenu from "./UserMenu";
 import UserLoading from "./UserLoading";
 
 async function Header() {
     await checkUser()
     return (
-        <header className="container">
+        <header className="container mx-auto">
             <nav className="py-6 px-4 flex justify-between items-center">
                 <Link href="/">
                     <Image
@@ -22,7 +24,7 @@ async function Header() {
                         className="h-10 w-auto object-contain"
                     />
                 </Link>
-                <div className="flex justify-center gap-4">
+                <div className="flex place-items-center gap-4">
                     <Link href="/project/create">
                     <Button variant="destructive">
                         <PenBox size={24} />

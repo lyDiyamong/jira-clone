@@ -5,6 +5,7 @@ import { Roboto_Mono } from "next/font/google";
 import Header from "@/components/Header";
 import { ClerkProvider } from "@clerk/nextjs";
 import { dark } from "@clerk/themes";
+import { Toaster } from "sonner";
 
 const mono = Roboto_Mono({ subsets: ["latin"] });
 
@@ -38,6 +39,7 @@ export default function RootLayout({
                         {/* Header */}
                         <Header />
                         <main className="min-h-screen">{children}</main>
+                        <Toaster richColors />
                         {/* Footer */}
                         <footer className="bg-gray-400 py-12">
                             <div className="container mx-auto px-4 text-center">

@@ -51,7 +51,9 @@ function Feature() {
                                     <feature.icon className="h-12 w-12 mb-4 text-blue-300" />
                                 </CardContent>
                                 <CardHeader>
-                                    <CardTitle className="leading-5">{feature.title}</CardTitle>
+                                    <CardTitle className="leading-5">
+                                        {feature.title}
+                                    </CardTitle>
                                 </CardHeader>
                                 <CardDescription className="text-start text-gray-300">
                                     {feature.description}
