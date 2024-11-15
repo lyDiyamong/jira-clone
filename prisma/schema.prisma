@@ -51,12 +51,12 @@ model Sprint {
     id        String       @id @default(cuid())
     name      String       @unique
     startDate DateTime
-    endDate   String
+    endDate   DateTime
     status    SprintStatus
     projectId String
     createdAt DateTime     @default(now())
     updatedAt DateTime     @updatedAt
-    project   Project      @relation(fields: [projectId], references: [id])
+    project   Project      @relation(fields: [projectId], references: [id], onDelete: Cascade)
     Issue     Issue[]
 }
 

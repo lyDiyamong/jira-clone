@@ -1,7 +1,7 @@
 "use server";
 import db from "@/lib/db";
 import { auth, clerkClient } from "@clerk/nextjs/server";
-import { Project } from "@prisma/client";
+import { Project, Sprint } from "@prisma/client";
 
 export async function createProject(data: Project): Promise<Project> {
     const { userId, orgId } = auth();
@@ -107,4 +107,45 @@ export async function deleteProject(
         where: { id: projectId },
     });
     return { success: true };
+}
+
+export async function getOneProject(
+    projectId: string
+): Promise<(Project & { Sprint: Sprint[] }) | null> {
+    const authResult = auth();
+    if (!authResult || !authResult.userId || !authResult.orgId) {
+        throw new Error("Unauthorized");
+    }
+    const { userId, orgId } = authResult;
+
+    if (!userId || !orgId) {
+        throw new Error("Unauthorized");
+    }
+
+    const user = await db.user.findUnique({
+        where: { clerkUserId: userId },
+    });
+
+    if (!user) {
+        throw new Error("User not found");
+    }
+
+    const project = await db.project.findUnique({
+        where: {
+            id: projectId,
+        },
+        include: {
+            Sprint: {
+                orderBy: {
+                    createdAt: "desc",
+                },
+            },
+        },
+    });
+
+    if (!project) {
+        return null;
+    }
+
+    return project;
 }

@@ -8,7 +8,7 @@ import { useForm, SubmitHandler } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 
 // Custom import
-import { Project, projectSchema } from "@/lib/schemas/project";
+import { Project, projectSchema } from "@/lib/schemas";
 import FormInput from "@/components/FormInput";
 import { Button } from "@/components/ui/button";
 
@@ -51,12 +51,12 @@ const CreateProjectPage = () => {
     });
 
     // Update the submit handler type to use Project
-    const onSubmit: SubmitHandler<Project> = (data) => {
+    const onSubmit: SubmitHandler<Project> = async (data) => {
         if (!isAdmin) {
             alert("Only organization admins can create projects");
             return;
         }
-        createProjectFn(data);
+        await createProjectFn(data);
     };
 
     useEffect(() => {

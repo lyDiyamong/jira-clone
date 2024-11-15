@@ -1,6 +1,6 @@
 import { currentUser } from "@clerk/nextjs/server";
 import db from "./db";
-import { User, userSchema } from "@/lib/schemas/user";
+import { User, userSchema } from "@/lib/schemas";
 
 export const checkUser = async (): Promise<User | null> => {
     const user = await currentUser();
