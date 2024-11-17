@@ -1,17 +1,19 @@
 import React from "react";
+import { SprintBoardProps } from "./SprintBoard";
 
-interface SprintBoardProps<Type> {
-    sprints: Array<Type>;
-    projectId: string;
-    orgId: string;
-}
+type SprintManagerProps<Type> =
+    | {
+          sprint: Type;
+          setSprint: React.Dispatch<React.SetStateAction<Type>>;
+      } & Pick<SprintBoardProps<Type>, "sprints" | "projectId">;
 
-const SprintBoard = <Type extends unknown>({
+const SprintManager = <Type extends { status: string }>({
+    sprint,
+    setSprint,
     sprints,
     projectId,
-    orgId,
-}: SprintBoardProps<Type>) => {
-    return <div>SprintBoard</div>;
+}: SprintManagerProps<Type>) => {
+    return <div>SprintManager</div>;
 };
 
-export default SprintBoard;
+export default SprintManager;
