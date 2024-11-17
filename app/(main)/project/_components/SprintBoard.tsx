@@ -1,4 +1,3 @@
-// SprintBoard.tsx
 "use client";
 
 // React & lib import
