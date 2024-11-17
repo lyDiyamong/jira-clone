@@ -1,14 +1,19 @@
-import React from "react";
+// SprintManager.tsx
+import React, { useState } from "react";
 import { SprintBoardProps } from "./SprintBoard";
 
-type SprintManagerProps = {
-    sprint : {
-        status : string
-    }
-    setSprint: void
-} | SprintBoardProps<Type>
+type SprintManagerProps<Type> = {
+    sprint: Type;
+    setSprint: React.Dispatch<React.SetStateAction<Type>>;
+} & Pick<SprintBoardProps<Type>, "sprints" | "projectId">;
 
-const SprintManager = ({ sprints, projectId, sprint, setSprint }) => {
+const SprintManager = <Type extends { status: string }>({
+    sprint,
+    setSprint,
+    sprints,
+    projectId,
+}: SprintManagerProps<Type>) => {
+    const [status, setStatus] = useState(sprint.status);
     return <div>SprintManager</div>;
 };
 
