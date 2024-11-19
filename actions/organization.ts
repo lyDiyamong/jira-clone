@@ -2,6 +2,8 @@
 
 import db from "@/lib/db";
 import { auth, clerkClient } from "@clerk/nextjs/server";
+import { getOrganization } from "@/actions/organization";
+import { Project } from "@prisma/client";
 
 export async function getOrganization(slug: string) {
     const { userId } = auth();
@@ -40,4 +42,39 @@ export async function getOrganization(slug: string) {
     }
 
     return organization;
+}
+
+export async function getOrganizationUsers(orgId: Project["organizationId"]) {
+    const { userId } = auth();
+
+    if (!userId) {
+        throw new Error("Unauthorized");
+    }
+    // find user by id
+    const user = await db.user.findUnique({
+        where: { clerkUserId: userId },
+    });
+
+    if (!user) {
+        throw new Error("User not found");
+    }
+
+    const organizationMemberships =
+        await clerkClient().organizations.getOrganizationMembershipList({
+            organizationId: orgId,
+        });
+
+    const userIds = organizationMemberships.data.map(
+        (memberShip) => memberShip.publicUserData?.userId
+    );
+
+    const users = await db.user.findMany({
+        where: {
+            clerkUserId: {
+                in: userIds,
+            },
+        },
+    });
+
+    return users;
 }

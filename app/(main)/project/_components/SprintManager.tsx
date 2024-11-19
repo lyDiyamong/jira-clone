@@ -1,3 +1,4 @@
+"use client"
 import React, { useEffect, useState } from "react";
 import { SprintBoardProps } from "./SprintBoard";
 import { Sprint } from "@prisma/client";
@@ -44,7 +45,6 @@ const SprintManager = <Type extends Sprint>({
     const {
         fn: updateStatusFn,
         loading,
-        error,
         data: updatedStatus,
     } = useFetch(updateSprintStatus);
 
@@ -64,17 +64,20 @@ const SprintManager = <Type extends Sprint>({
     };
 
     useEffect(() => {
-        if (updatedStatus ) {
-            setStatus(updatedStatus.status)
-            toast.success("Sprint updated successfully ")
+        if (updatedStatus) {
+            setStatus(updatedStatus.status);
+            setSprint({
+                ...sprint,
+                status: updatedStatus.status
+            })
+            toast.success("Sprint updated successfully ");
         }
-    }, [updatedStatus, loading])
+    }, [updatedStatus, loading]);
 
     const getStatusText = (): string | null => {
         if (status === "COMPLETED") {
             return `Sprint Ended`;
         }
-        console.log(startDate);
         if (status === "ACTIVE" && isAfter(now, endDate)) {
             return `Overdue by ${formatDistanceToNow(endDate)}`;
         }
@@ -128,7 +131,9 @@ const SprintManager = <Type extends Sprint>({
                 )}
             </div>
 
-            {loading && <BarLoader width={"100%"} className="mt-2" color="#36d7b7" />}
+            {loading && (
+                <BarLoader width={"100%"} className="mt-2" color="#36d7b7" />
+            )}
 
             {getStatusText() && (
                 <Badge className="mt-3 ml-1 self-start">

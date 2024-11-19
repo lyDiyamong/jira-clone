@@ -1,7 +1,7 @@
 "use client";
 
 import { Button } from "@/components/ui/button";
-import { sprintSchema, Sprint } from "@/lib/schemas";
+import { sprintSchema } from "@/lib/schemas";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { useState } from "react";
 import { Controller, SubmitHandler, useForm } from "react-hook-form";
@@ -10,13 +10,20 @@ import { Card, CardContent } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
 import { Popover } from "@radix-ui/react-popover";
 import { PopoverContent, PopoverTrigger } from "@/components/ui/popover";
-import { DayPicker, DateRange } from 'react-day-picker';
+import { DayPicker } from "react-day-picker";
 import "react-day-picker/dist/style.css";
 import { CalendarIcon } from "lucide-react";
 import useFetch from "@/hooks/use-fetch";
 import { createSprint } from "@/actions/sprint";
 import { useRouter } from "next/navigation";
 import { toast } from "sonner";
+import { Sprint } from "@prisma/client";
+
+// Date range Props
+type DateRange = {
+    to: Date
+    from: Date
+}
 
 const SprintCreationForm = ({
     projectTitle,
@@ -31,7 +38,7 @@ const SprintCreationForm = ({
 }) => {
     // State
     const [showForm, setShowForm] = useState(false);
-    const [dateRange, setDateRange] = useState<DateRange >({
+    const [dateRange, setDateRange] = useState<DateRange>({
         from: new Date(),
         to: addDays(new Date(), 14),
     });
@@ -43,7 +50,7 @@ const SprintCreationForm = ({
         handleSubmit,
         control,
         formState: { errors },
-    } = useForm({
+    } = useForm<Sprint>({
         resolver: zodResolver(sprintSchema),
         defaultValues: {
             name: `${projectKey}-${sprintKey}`,
@@ -158,7 +165,7 @@ const SprintCreationForm = ({
                                                             mode="range"
                                                             selected={dateRange}
                                                             onSelect={(
-                                                                range
+                                                                range: DateRange
                                                             ) => {
                                                                 if (
                                                                     range?.from &&

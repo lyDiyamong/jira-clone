@@ -19,12 +19,8 @@ export const sprintSchema = z.object({
         .string()
         .min(1, "Sprint name is required")
         .max(100, "Sprint name must be 100 characters or less"),
-    startDate: z.date({
-        required_error: "Start Date is required"
-    }),
-    endDate: z.date({
-        required_error: "End Date is required"
-    }),
+    startDate: z.date(),
+    endDate: z.date(),
 });
 
 // Infer TypeScript type from Zod schema
@@ -43,8 +39,21 @@ export const projectSchema = z.object({
     description: z
         .string()
         .max(500, "Description must be 500 characters or less")
-        .optional()
+        .optional(),
 });
 
 // Infer TypeScript type from Zod schema
 export type Project = z.infer<typeof projectSchema>;
+
+export const issueSchema = z.object({
+    title: z
+        .string()
+        .min(1, "Title name is required")
+        .max(100, "Sprint name must be 100 characters or less"),
+    assigneeId: z.string().cuid("Please select assginee"),
+    description: z.string().optional(),
+    priority: z.enum(["LOW", "MEDIUM", "HIGH", "URGENT"]),
+});
+
+// Infer TypeScript type from Zod schema
+export type IssueZod = z.infer<typeof issueSchema>;
