@@ -1,9 +1,9 @@
 "use client";
 
 // React & lib import
-import React, { useState } from "react";
+import React, { useEffect, useState } from "react";
 import { Sprint } from "@prisma/client";
-import { DragDropContext, Droppable } from "@hello-pangea/dnd";
+import { DragDropContext, Draggable, Droppable } from "@hello-pangea/dnd";
 
 // Custom import
 import SprintManager from "./SprintManager";
@@ -11,6 +11,10 @@ import statuses from "@/data/status.json";
 import { Button } from "@/components/ui/button";
 import { Plus } from "lucide-react";
 import CreateIssueDrawer from "./CreateIssueDrawer";
+import useFetch from "@/hooks/use-fetch";
+import { getIssuesForSprint } from "@/actions/issue";
+import { BarLoader } from "react-spinners";
+import IssueCard from "@/components/IssueCard";
 
 export type SprintBoardProps<Type = Sprint> = {
     sprints: Type[];
@@ -19,25 +23,43 @@ export type SprintBoardProps<Type = Sprint> = {
 };
 
 const SprintBoard = ({ sprints, projectId, orgId }: SprintBoardProps) => {
-    const [currentSprint, setCurrentSprint] = useState(
-        sprints.find((spr) => spr.status === "ACTIVE") || sprints[0]
+    const [currentSprint, setCurrentSprint] = useState<Sprint | undefined>(
+        sprints.find((spr) => spr?.status === "ACTIVE") || sprints[0]
     );
 
     const [isDrawerOpen, setIsDrawerOpen] = useState(false);
     const [selectedStatus, setSelectedStatus] = useState<null | string>(null);
 
-    const handleAddIssue = (status) => {
+    const handleAddIssue = (status: null | string) => {
         setSelectedStatus(status);
         setIsDrawerOpen(true);
     };
 
+    // fetch issue for sprint
+    const {
+        fn: fetchIssues,
+        data: issues,
+        loading: issueLoading,
+        setData: setIssues,
+        error: issuesError,
+    } = useFetch(getIssuesForSprint);
+
+    useEffect(() => {
+        if (currentSprint?.id) {
+            fetchIssues(currentSprint?.id);
+        }
+    }, [currentSprint?.id]);
+    const [filteredIssues, setFilteredIssues] = useState(issues);
+
     // Create Issue function
-    const handleIssueCreate = () => {
-
-    }
-
+    const handleIssueCreated = () => {
+        // fetch issues again
+        fetchIssues(currentSprint?.id);
+    };
     // Drag handler
     const onDragEnd = () => {};
+
+    if (issuesError) return <div>Error Loading issues</div>;
 
     return (
         <div>
@@ -48,6 +70,9 @@ const SprintBoard = ({ sprints, projectId, orgId }: SprintBoardProps) => {
                 sprints={sprints}
                 projectId={projectId}
             />
+            {issueLoading && (
+                <BarLoader width={"100%"} className="mt-2" color="#36d7b7" />
+            )}
             {/* Kanban board */}
             <DragDropContext onDragEnd={onDragEnd}>
                 <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 mt-4 bg-slate-900 p-4 rounded-lg">
@@ -68,6 +93,34 @@ const SprintBoard = ({ sprints, projectId, orgId }: SprintBoardProps) => {
                                                 {status.name}
                                             </h3>
                                             {/* Issues */}
+
+                                            {issues
+                                                ?.filter(
+                                                    (issue) =>
+                                                        issue.status ===
+                                                        status.key
+                                                )
+                                                .map((issue, index) => (
+                                                    <Draggable
+                                                        key={issue.id}
+                                                        index={index}
+                                                        draggableId={issue.id}
+                                                    >
+                                                        {(provided) => {
+                                                            return (
+                                                                <div
+                                                                    ref={
+                                                                        provided.innerRef
+                                                                    }
+                                                                    {...provided.draggableProps}
+                                                                    {...provided.dragHandleProps}
+                                                                >
+                                                                    <IssueCard issue={issue} />
+                                                                </div>
+                                                            );
+                                                        }}
+                                                    </Draggable>
+                                                ))}
                                             {provided.placeholder}
                                             {status.key === "TODO" &&
                                                 currentSprint.status !==
@@ -75,7 +128,11 @@ const SprintBoard = ({ sprints, projectId, orgId }: SprintBoardProps) => {
                                                     <Button
                                                         variant="ghost"
                                                         className="w-full"
-                                                        onClick={handleAddIssue}
+                                                        onClick={() =>
+                                                            handleAddIssue(
+                                                                status.key
+                                                            )
+                                                        }
                                                     >
                                                         <Plus className="mr-2 size-4" />
                                                         Create Issue
@@ -95,7 +152,7 @@ const SprintBoard = ({ sprints, projectId, orgId }: SprintBoardProps) => {
                 sprintId={currentSprint.id}
                 status={selectedStatus}
                 projectId={projectId}
-                onIssueCreate={handleIssueCreate}
+                onIssueCreate={handleIssueCreated}
                 orgId={orgId}
             />
         </div>

@@ -1,31 +1,29 @@
 "use client";
+// React & lib import
 import { createIssue } from "@/actions/issue";
 import { getOrganizationUsers } from "@/actions/organization";
 import { Button } from "@/components/ui/button";
+import useFetch from "@/hooks/use-fetch";
 
 import {
     Drawer,
     DrawerContent,
-    DrawerDescription,
     DrawerHeader,
     DrawerTitle,
-    DrawerTrigger,
 } from "@/components/ui/drawer";
 import { Input } from "@/components/ui/input";
-import useFetch from "@/hooks/use-fetch";
+
 import { issueSchema, IssueZod } from "@/lib/schemas";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { Issue, Project } from "@prisma/client";
-import { useEffect, useReducer } from "react";
+import { useEffect } from "react";
 import { Controller, SubmitHandler, useForm } from "react-hook-form";
 import { BarLoader } from "react-spinners";
 import MDEditor from "@uiw/react-md-editor";
 import {
     Select,
     SelectContent,
-    SelectGroup,
     SelectItem,
-    SelectLabel,
     SelectTrigger,
     SelectValue,
 } from "@/components/ui/select";
@@ -37,7 +35,7 @@ const CreateIssueDrawer = ({
     sprintId,
     status,
     projectId,
-    onIssueCreated,
+    onIssueCreate,
     orgId,
 }: {
     isOpen: boolean;
@@ -45,7 +43,7 @@ const CreateIssueDrawer = ({
     sprintId: string;
     status: Issue["status"];
     projectId: Project["id"];
-    onIssueCreated: VoidFunction;
+    onIssueCreate: VoidFunction;
     orgId: Project["organizationId"];
 }) => {
     const {
@@ -84,7 +82,7 @@ const CreateIssueDrawer = ({
 
     // Submit Issue
     const onSubmit: SubmitHandler<Issue> = async (data: Issue) => {
-        await createIssue(projectId, {
+        await createIssueFn(projectId, {
             ...data,
             status,
             sprintId,
@@ -94,7 +92,7 @@ const CreateIssueDrawer = ({
         if (newIssue) {
             reset();
             onClose();
-            onIssueCreated();
+            onIssueCreate();
             toast.success("Issue created successfully");
         }
     }, [newIssue, createIssueLoading]);
@@ -103,10 +101,7 @@ const CreateIssueDrawer = ({
         <Drawer open={isOpen} onClose={onClose}>
             <DrawerContent>
                 <DrawerHeader>
-                    <DrawerTitle>Are you absolutely sure?</DrawerTitle>
-                    <DrawerDescription>
-                        This action cannot be undone.
-                    </DrawerDescription>
+                    <DrawerTitle>Create Issue for member</DrawerTitle>
                 </DrawerHeader>
                 {usersLoading && (
                     <BarLoader

@@ -2,7 +2,6 @@
 
 import db from "@/lib/db";
 import { auth, clerkClient } from "@clerk/nextjs/server";
-import { getOrganization } from "@/actions/organization";
 import { Project } from "@prisma/client";
 
 export async function getOrganization(slug: string) {

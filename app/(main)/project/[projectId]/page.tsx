@@ -20,18 +20,18 @@ const ProjectDetailPage = async ({
         <div className="container mx-auto ">
             {/* Sprint Creation */}
             <SprintCreationForm
-                projectTitle={project.name}
+                projectTitle={project?.name}
                 projectId={projectId}
-                projectKey={project.key}
-                sprintKey={project.Sprint?.length + 1}
+                projectKey={project?.key}
+                sprintKey={project?.Sprint?.length + 1}
             />
             {/* Sprint Board */}
-            {project.Sprint.length > 0 ? (
+            {project?.Sprint?.length > 0 ? (
                 <>
                     <SprintBoard
-                        sprints={project.Sprint}
+                        sprints={project?.Sprint}
                         projectId={projectId}
-                        orgId={project.organizationId}
+                        orgId={project?.organizationId}
                     />
                 </>
             ) : (

@@ -19,7 +19,7 @@ import { toast } from "sonner";
 import { BarLoader } from "react-spinners";
 
 type SprintManagerProps<Type> = {
-    sprint: Type;
+    sprint: Type ;
     setSprint: React.Dispatch<React.SetStateAction<Type | undefined>>;
 } & Pick<SprintBoardProps<Type>, "sprints" | "projectId">;
 
@@ -50,7 +50,7 @@ const SprintManager = <Type extends Sprint>({
 
     // Handler
     const handleSprintChange = (value: string): void => {
-        const selectedSprint = sprints.find((select) => select.id === value);
+        const selectedSprint = sprints?.find((select) => select.id === value);
         if (selectedSprint) {
             setSprint(selectedSprint);
             setStatus(selectedSprint.status); // Only update status if selectedSprint is defined)
@@ -99,7 +99,7 @@ const SprintManager = <Type extends Sprint>({
                         <SelectValue placeholder="Select Sprint" />
                     </SelectTrigger>
                     <SelectContent>
-                        {sprints.map((sprint) => {
+                        {sprints?.map((sprint) => {
                             return (
                                 <SelectItem key={sprint.id} value={sprint.id}>
                                     {sprint.name} (
