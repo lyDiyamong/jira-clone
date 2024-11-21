@@ -1,5 +1,5 @@
 import { Issue, User } from "@prisma/client";
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import { AppRouterInstance } from "next/dist/shared/lib/app-router-context.shared-runtime";
 import { useOrganization, useUser } from "@clerk/nextjs";
 
@@ -87,6 +87,16 @@ const IssueDetailDialog = ({
         }
     };
 
+    useEffect(() => {
+        if (deletedData) {
+          onClose();
+          onDelete();
+        }
+        if (updatedData) {
+          onUpdate(updatedData);
+        }
+      }, [deletedData, updatedData, deleteLoading, updateLoading]);
+
     const canChange =
         user?.id === issue.reporter.clerkUserId ||
         membership?.role === "org:admin";
@@ -146,7 +156,7 @@ const IssueDetailDialog = ({
                             onValueChange={handlePriorityChange}
                             disabled={!canChange}
                         >
-                            <SelectTrigger>
+                            <SelectTrigger className={`border ${borderCol} rounded`}>
                                 <SelectValue placeholder="Priority" />
                             </SelectTrigger>
                             <SelectContent>

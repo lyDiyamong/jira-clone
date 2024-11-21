@@ -31,8 +31,8 @@ type IssueCardProps = {
 const IssueCard = ({
     issue,
     showStatus = true,
-    onDelete,
-    onUpdate,
+    onDelete = () => {},
+    onUpdate = () => {},
 }: IssueCardProps) => {
     const [isDialogOpen, setIsDialogOpen] = useState(false);
     const router = useRouter();
@@ -87,8 +87,8 @@ const IssueCard = ({
                         isOpen={isDialogOpen}
                         onClose={() => setIsDialogOpen(false)}
                         issue={issue}
-                        onDelete={onDelete}
-                        onUpdate={onUpdate}
+                        onDelete={onDeleteHandler}
+                        onUpdate={onUpdateHandler}
                         borderCol={
                             priorityColor[IssuePriority[issue?.priority]]
                         }

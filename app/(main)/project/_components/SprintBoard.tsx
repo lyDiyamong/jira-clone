@@ -220,8 +220,33 @@ const SprintBoard = ({ sprints, projectId, orgId }: SprintBoardProps) => {
                                                                     {...provided.dragHandleProps}
                                                                 >
                                                                     <IssueCard
+                                                                        key={
+                                                                            issue.id
+                                                                        }
                                                                         issue={
                                                                             issue
+                                                                        }
+                                                                        showStatus
+                                                                        onDelete={() =>
+                                                                            fetchIssues(
+                                                                                currentSprint?.id
+                                                                            )
+                                                                        }
+                                                                        onUpdate={(
+                                                                            updated
+                                                                        ) =>
+                                                                            setIssues(
+                                                                                (
+                                                                                    issue
+                                                                                ) => {
+                                                                                    if (
+                                                                                        issue.id ===
+                                                                                        updated.id
+                                                                                    )
+                                                                                        return updated;
+                                                                                    return issue;
+                                                                                }
+                                                                            )
                                                                         }
                                                                     />
                                                                 </div>
