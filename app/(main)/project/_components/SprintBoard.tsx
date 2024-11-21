@@ -2,8 +2,13 @@
 
 // React & lib import
 import React, { useEffect, useState } from "react";
-import { Sprint } from "@prisma/client";
-import { DragDropContext, Draggable, Droppable } from "@hello-pangea/dnd";
+import { Sprint, Issue } from "@prisma/client";
+import {
+    DragDropContext,
+    Draggable,
+    Droppable,
+    DropResult,
+} from "@hello-pangea/dnd";
 
 // Custom import
 import SprintManager from "./SprintManager";
@@ -12,9 +17,25 @@ import { Button } from "@/components/ui/button";
 import { Plus } from "lucide-react";
 import CreateIssueDrawer from "./CreateIssueDrawer";
 import useFetch from "@/hooks/use-fetch";
-import { getIssuesForSprint } from "@/actions/issue";
+import { getIssuesForSprint, updateIssueOrder } from "@/actions/issue";
 import { BarLoader } from "react-spinners";
 import IssueCard from "@/components/IssueCard";
+import { toast } from "sonner";
+
+// Reorder index of issue card
+const reorder = (
+    list: Issue[],
+    startIndex: number,
+    endIndex: number
+): Issue[] => {
+    const result = Array.from(list);
+    // issue that has been remove
+    const [removed] = result.splice(startIndex, 1);
+    // insert it back
+    result.splice(endIndex, 0, removed);
+
+    return result;
+};
 
 export type SprintBoardProps<Type = Sprint> = {
     sprints: Type[];
@@ -49,15 +70,92 @@ const SprintBoard = ({ sprints, projectId, orgId }: SprintBoardProps) => {
             fetchIssues(currentSprint?.id);
         }
     }, [currentSprint?.id]);
+
     const [filteredIssues, setFilteredIssues] = useState(issues);
 
+    // update issue order and status
+    const {
+        fn: updateIssuesOrderFn,
+        loading: updateIssuesLoading,
+        error: updateIssuesError,
+    } = useFetch(updateIssueOrder);
     // Create Issue function
     const handleIssueCreated = () => {
         // fetch issues again
         fetchIssues(currentSprint?.id);
     };
     // Drag handler
-    const onDragEnd = () => {};
+    const onDragEnd = async (result: DropResult) => {
+        if (currentSprint?.status === "PLANNED") {
+            toast.warning("Start the sprint to update board");
+            return;
+        }
+        if (currentSprint?.status === "COMPLETED") {
+            toast.warning("Cannot update board after sprint end");
+            return;
+        }
+
+        // Destination : where to drop
+        // source : where it came from
+        const { destination, source } = result;
+
+        if (!destination) {
+            return;
+        }
+
+        if (
+            destination.droppableId === source.droppableId &&
+            destination.index === source.index
+        ) {
+            return;
+        }
+        const newOrderedData: Issue[] = [...issues];
+        // Manipulate the index of each status
+
+        const sourceList = newOrderedData.filter(
+            (list) => list.status === source.droppableId
+        );
+        const destinationList = newOrderedData.filter(
+            (list) => list.status === destination.droppableId
+        );
+
+        // if source and dest same
+        if (source.droppableId === destination.droppableId) {
+            const reorderedIssues = reorder(
+                sourceList,
+                source.index,
+                destination.index
+            );
+            reorderedIssues.forEach((card, i) => {
+                card.order = i;
+            });
+        }
+        // remove card from the source to the dest
+        else {
+            // remove card from the source list
+            const [movedCard] = sourceList.splice(source.index, 1);
+            // assign the new list id to the moved card
+            movedCard.status = destination.droppableId;
+
+            // add new card to the destination list
+            destinationList.splice(destination.index, 0, movedCard);
+
+            sourceList.forEach((card, i) => {
+                card.order = i;
+            });
+
+            // update the order for each card in destination list
+            destinationList.forEach((card, i) => {
+                card.order = i;
+            });
+        }
+
+        const sortedIssues = newOrderedData.sort((a, b) => a.order - b.order);
+        setIssues(sortedIssues);
+
+        // Backend logic here
+        updateIssuesOrderFn(sortedIssues);
+    };
 
     if (issuesError) return <div>Error Loading issues</div>;
 
@@ -70,12 +168,15 @@ const SprintBoard = ({ sprints, projectId, orgId }: SprintBoardProps) => {
                 sprints={sprints}
                 projectId={projectId}
             />
-            {issueLoading && (
+            {updateIssuesError && (
+                <p className="text-red-500 mt-2">{updateIssuesError.message}</p>
+            )}
+            {(updateIssuesLoading || issueLoading) && (
                 <BarLoader width={"100%"} className="mt-2" color="#36d7b7" />
             )}
             {/* Kanban board */}
             <DragDropContext onDragEnd={onDragEnd}>
-                <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 mt-4 bg-slate-900 p-4 rounded-lg">
+                <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 mt-4 gap-4 bg-slate-900 p-4 rounded-lg">
                     {statuses.map((status) => {
                         return (
                             <Droppable
@@ -105,6 +206,9 @@ const SprintBoard = ({ sprints, projectId, orgId }: SprintBoardProps) => {
                                                         key={issue.id}
                                                         index={index}
                                                         draggableId={issue.id}
+                                                        isDragDisabled={
+                                                            updateIssuesLoading
+                                                        }
                                                     >
                                                         {(provided) => {
                                                             return (
@@ -115,7 +219,11 @@ const SprintBoard = ({ sprints, projectId, orgId }: SprintBoardProps) => {
                                                                     {...provided.draggableProps}
                                                                     {...provided.dragHandleProps}
                                                                 >
-                                                                    <IssueCard issue={issue} />
+                                                                    <IssueCard
+                                                                        issue={
+                                                                            issue
+                                                                        }
+                                                                    />
                                                                 </div>
                                                             );
                                                         }}

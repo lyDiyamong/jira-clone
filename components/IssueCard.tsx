@@ -1,14 +1,18 @@
 "use client";
-import { Issue, User } from "@prisma/client";
+import { Issue, IssuePriority, User } from "@prisma/client";
 import {
     Card,
     CardContent,
     CardHeader,
     CardTitle,
-    CardFooter
+    CardFooter,
 } from "./ui/card";
 import { Badge } from "./ui/badge";
 import UserAvatar from "./UserAvatar";
+import { formatDistanceToNow } from "date-fns";
+import { useState } from "react";
+import { useRouter } from "next/navigation";
+import IssueDetailDialog from "./IssueDetailDialog";
 
 const priorityColor = {
     LOW: "border-green-600",
@@ -18,7 +22,7 @@ const priorityColor = {
 };
 
 type IssueCardProps = {
-    issue: Issue & { assignee : User  };
+    issue: Issue & { assignee: User };
     showStatus: boolean;
     onDelete: VoidFunction;
     onUpdate: VoidFunction;
@@ -26,27 +30,72 @@ type IssueCardProps = {
 
 const IssueCard = ({
     issue,
-    showStatus = false,
+    showStatus = true,
     onDelete,
     onUpdate,
 }: IssueCardProps) => {
+    const [isDialogOpen, setIsDialogOpen] = useState(false);
+    const router = useRouter();
+
+    const onDeleteHandler = (...params) => {
+        router.refresh();
+        onDelete(...params);
+    };
+    const onUpdateHandler = (...params) => {
+        router.refresh();
+        onUpdate(...params);
+    };
+
+    const created = formatDistanceToNow(new Date(issue.createdAt), {
+        // format to x ago like : hours ago, days ago
+        addSuffix: true,
+    });
+
     return (
         <>
-            <Card>
-                <CardHeader>
+            <Card
+                className="cursor-pointer hover:shadow-md transition-shadow"
+                onClick={() => setIsDialogOpen(true)}
+            >
+                <CardHeader
+                    className={`border-t-2 ${
+                        priorityColor[issue.priority]
+                    } rounded-lg`}
+                >
                     <CardTitle>{issue.title}</CardTitle>
                 </CardHeader>
                 <CardContent>
                     {showStatus && <Badge>{issue.status}</Badge>}
-                    <Badge variant="outline" className="ml-1">
+                    <Badge
+                        variant="outline"
+                        className={`ml-1 ${priorityColor[issue.priority]}`}
+                    >
                         {issue.priority}
                     </Badge>
-
                 </CardContent>
-                <CardFooter>
-                    <UserAvatar user={issue.assignee}  />
+                <CardFooter className="flex flex-col items-start space-y-3">
+                    <UserAvatar user={issue.assignee} />
+
+                    <div className="text-xs text-gray-400 w-full">
+                        Created {created}
+                    </div>
                 </CardFooter>
             </Card>
+            {isDialogOpen && (
+                <>
+                    <IssueDetailDialog
+                        isOpen={isDialogOpen}
+                        onClose={() => setIsDialogOpen(false)}
+                        issue={issue}
+                        onDelete={onDelete}
+                        onUpdate={onUpdate}
+                        borderCol={
+                            priorityColor[IssuePriority[issue?.priority]]
+                        }
+                        router={router}
+                    />
+                </>
+            )}
         </>
     );
 };
