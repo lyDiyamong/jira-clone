@@ -73,7 +73,7 @@ const BoardFilters = ({
         onFilterChange(filteredIssues);
     }, [searchTerm, selectedAssignees, selectedPriority, issues]);
 
-    const toggleAssignee = (assigneeId) => {
+    const toggleAssignee = (assigneeId : User["clerkUserId"]) => {
         setSelectedAssignees((prev) =>
             prev.includes(assigneeId)
                 ? prev.filter((id) => id !== assigneeId)

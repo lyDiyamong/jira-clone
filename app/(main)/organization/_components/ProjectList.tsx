@@ -12,8 +12,7 @@ import DeleteProject from "./DeleteProject";
 
 const ProjectList = async ({ orgId }: { orgId: string }) => {
     const projects = await getProjects(orgId);
-    console.log("project", projects)
-    console.log("orgid", orgId)
+
 
     if (projects?.length === 0) {
         return (

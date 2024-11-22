@@ -77,7 +77,6 @@ const IssueDetailDialog = ({
     const handlePriorityChange = async (newPriority: Issue["priority"]) => {
         setPriority(newPriority);
         await updateIssueFn(issue.id, { priority: newPriority, status });
-        console.log(updatedData);
         router.refresh();
     };
 
