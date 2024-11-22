@@ -7,7 +7,7 @@ import { auth } from "@clerk/nextjs/server";
 import { redirect } from "next/navigation";
 
 const Organization = async ({ params }: { params: { orgId: string } }) => {
-    const { orgId } = await params;
+    const { orgId } = params;
     const organization = await getOrganization(orgId);
 
     const { userId } = auth();
