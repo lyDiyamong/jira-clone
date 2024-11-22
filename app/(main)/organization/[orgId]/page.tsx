@@ -2,10 +2,19 @@ import { getOrganization } from "@/actions/organization";
 import OrgSwitcher from "@/components/OrgSwitcher";
 import React from "react";
 import ProjectList from "../_components/ProjectList";
+import UserIssues from "../_components/UserIssues";
+import { auth } from "@clerk/nextjs/server";
+import { redirect } from "next/navigation";
 
 const Organization = async ({ params }: { params: { orgId: string } }) => {
     const { orgId } = await params;
     const organization = await getOrganization(orgId);
+
+    const { userId } = auth();
+
+    if (!userId) {
+        redirect("/sign-in");
+    }
 
     if (!organization) {
         return <div>Organization not found</div>;
@@ -25,6 +34,10 @@ const Organization = async ({ params }: { params: { orgId: string } }) => {
             </div>
             <div className="mb-8">
                 Show User assigned and reported issues here
+            </div>
+
+            <div>
+                <UserIssues userId={userId} />
             </div>
         </div>
     );

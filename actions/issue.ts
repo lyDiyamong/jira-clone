@@ -1,7 +1,7 @@
 "use server";
 import db from "@/lib/db";
 import { auth } from "@clerk/nextjs/server";
-import { Issue, Sprint } from "@prisma/client";
+import { Issue, Sprint, User } from "@prisma/client";
 
 export async function createIssue(projectId: Issue["projectId"], data: Issue) {
     const { userId, orgId } = auth();
@@ -158,4 +158,36 @@ export async function updateIssue(issueId: Issue["id"], data: Issue) {
             );
         }
     }
+}
+
+export async function getUserIssues(userId: User["clerkUserId"] | string) {
+    const { orgId } = auth();
+
+    if (!userId || !orgId) {
+        throw new Error("No user id or organization id found");
+    }
+
+    const user = await db.user.findUnique({
+        where: { clerkUserId: userId },
+    });
+
+    if (!user) {
+        throw new Error("User not found");
+    }
+
+    const issues = await db.issue.findMany({
+        where: {
+            OR: [{ assigneeId: user.id }, { reporterId: user.id }],
+            project: {
+                organizationId: orgId,
+            },
+        },
+        include: {
+            project: true,
+            assignee: true,
+            reporter: true,
+        },
+        orderBy: { updatedAt: "desc" },
+    });
+    return issues;
 }

@@ -17,6 +17,7 @@ import useFetch from "@/hooks/use-fetch";
 import { SprintStatus, updateSprintStatus } from "@/actions/sprint";
 import { toast } from "sonner";
 import { BarLoader } from "react-spinners";
+import { useSearchParams, useRouter } from "next/navigation";
 
 type SprintManagerProps<Type> = {
     sprint: Type;
@@ -30,6 +31,23 @@ const SprintManager = <Type extends Sprint>({
     projectId,
 }: SprintManagerProps<Type>) => {
     const [status, setStatus] = useState(sprint.status);
+
+    const searchParams = useSearchParams();
+    const router = useRouter();
+
+    useEffect(() => {
+        const sprintId = searchParams.get("sprint");
+
+        if (sprintId && sprintId !== sprint.id) {
+            const selectedSprint = sprints.find(
+                (sprint) => sprint.id === sprintId
+            );
+            if (selectedSprint) {
+                setSprint(selectedSprint);
+                setStatus(selectedSprint.status);
+            }
+        }
+    }, [searchParams, sprints]);
 
     // Sprint Date
     const startDate = new Date(sprint.startDate);
@@ -54,6 +72,9 @@ const SprintManager = <Type extends Sprint>({
         if (selectedSprint) {
             setSprint(selectedSprint);
             setStatus(selectedSprint.status); // Only update status if selectedSprint is defined)
+            router.replace(`/project/${projectId}`, undefined, {
+                shallow: true,
+            });
         } else {
             setSprint(undefined); // Handle cases where no sprint is found
             setStatus("PLANNED"); // Or any default status you want to use
@@ -113,9 +134,8 @@ const SprintManager = <Type extends Sprint>({
 
                 {canStart && (
                     <Button
-                        className="w-full md:w-32"
+                        className="w-full md:w-32 bg-green-900 text-white"
                         onClick={() => handleStatusChange("ACTIVE")}
-                        className="bg-green-900 text-white"
                         disabled={loading}
                     >
                         Start Sprint

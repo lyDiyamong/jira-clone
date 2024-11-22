@@ -21,8 +21,8 @@ const priorityColor = {
     URGENT: "border-red-400",
 };
 
-type IssueCardProps = {
-    issue: Issue & { assignee: User };
+export type IssueCardProps = {
+    issue: Issue & { assignee: User, reporter: User };
     showStatus: boolean;
     onDelete: VoidFunction;
     onUpdate: VoidFunction;
@@ -30,7 +30,7 @@ type IssueCardProps = {
 
 const IssueCard = ({
     issue,
-    showStatus = true,
+    showStatus = false,
     onDelete = () => {},
     onUpdate = () => {},
 }: IssueCardProps) => {
