@@ -11,7 +11,7 @@ import {
     SelectValue,
 } from "@/components/ui/select";
 import { Button } from "@/components/ui/button";
-import { Slice, X } from "lucide-react";
+import { X } from "lucide-react";
 
 const priorityOptions = ["LOW", "MEDIUM", "HIGH", "URGENT"];
 const priorityColor = {

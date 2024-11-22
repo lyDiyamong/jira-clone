@@ -18,7 +18,7 @@ import {
 } from "@/components/ui/select";
 import { usePathname } from "next/navigation";
 import { Button } from "./ui/button";
-import { CloudHail, ExternalLink } from "lucide-react";
+import { ExternalLink } from "lucide-react";
 import useFetch from "@/hooks/use-fetch";
 import { deleteIssue, updateIssue } from "@/actions/issue";
 import { BarLoader } from "react-spinners";
@@ -77,7 +77,7 @@ const IssueDetailDialog = ({
     const handlePriorityChange = async (newPriority: Issue["priority"]) => {
         setPriority(newPriority);
         await updateIssueFn(issue.id, { priority: newPriority, status });
-        console.log(updatedData)
+        console.log(updatedData);
         router.refresh();
     };
 
@@ -90,13 +90,13 @@ const IssueDetailDialog = ({
 
     useEffect(() => {
         if (deletedData) {
-          onClose();
-          onDelete();
+            onClose();
+            onDelete();
         }
         if (updatedData) {
-          onUpdate(updatedData);
+            onUpdate(updatedData);
         }
-      }, [deletedData, updatedData, deleteLoading, updateLoading]);
+    }, [deletedData, updatedData, deleteLoading, updateLoading]);
 
     const canChange =
         user?.id === issue.reporter.clerkUserId ||
@@ -157,7 +157,9 @@ const IssueDetailDialog = ({
                             onValueChange={handlePriorityChange}
                             disabled={!canChange}
                         >
-                            <SelectTrigger className={`border ${borderCol} rounded`}>
+                            <SelectTrigger
+                                className={`border ${borderCol} rounded`}
+                            >
                                 <SelectValue placeholder="Priority" />
                             </SelectTrigger>
                             <SelectContent>

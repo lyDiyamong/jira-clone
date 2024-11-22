@@ -13,7 +13,7 @@ import {
 } from "@/components/ui/drawer";
 import { Input } from "@/components/ui/input";
 
-import { issueSchema, IssueZod } from "@/lib/schemas";
+import { issueSchema } from "@/lib/schemas";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { Issue, Project } from "@prisma/client";
 import { useEffect } from "react";

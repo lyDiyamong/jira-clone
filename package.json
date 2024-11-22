@@ -13,6 +13,7 @@
         "db:studio": "prisma studio"
     },
     "dependencies": {
+        "@clerk/clerk-sdk-node": "^5.0.67",
         "@clerk/nextjs": "^5.7.1",
         "@clerk/themes": "^2.1.42",
         "@hello-pangea/dnd": "^17.0.0",

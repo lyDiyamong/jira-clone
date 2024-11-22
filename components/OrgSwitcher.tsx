@@ -4,7 +4,6 @@ import {
     OrganizationSwitcher,
     SignedIn,
     useOrganization,
-    UserButton,
     useUser,
 } from "@clerk/nextjs";
 import { usePathname } from "next/navigation";
@@ -34,7 +33,7 @@ const OrgSwitcher = () => {
                         elements : {
                             organizationSwitcherTrigger: "border border-gray-300 rounded-md px-5 py-2 hover:border-red-300",
                             organizationSwitcherIcon: "text-white",
-                            
+
                         }
                     }}
                 />

@@ -1,7 +1,6 @@
 import { getUserIssues } from "@/actions/issue";
 import IssueCard, { IssueCardProps } from "@/components/IssueCard";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
-import { Issue, User } from "@prisma/client";
 import { Suspense } from "react";
 import { BarLoader } from "react-spinners";
 const UserIssues = async ({ userId }: { userId: string }) => {
