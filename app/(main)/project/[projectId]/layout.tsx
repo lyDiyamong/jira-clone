@@ -4,7 +4,7 @@ import { BarLoader } from "react-spinners";
 
 const ProjectLayout = async ({ children }: { children: ReactNode }) => {
     return (
-        <div className="mx-auto">
+        <div className="container mx-auto px-6">
             <Suspense fallback={<BarLoader width={"100%" } color="#36d7b7" />}>{children}</Suspense>
         </div>
     );

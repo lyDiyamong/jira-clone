@@ -2,7 +2,7 @@
 
 // React & lib import
 import React, { useEffect, useState } from "react";
-import { Sprint, Issue } from "@prisma/client";
+import { Sprint, Issue, IssueStatus } from "@prisma/client";
 import {
     DragDropContext,
     Draggable,
@@ -21,6 +21,7 @@ import { getIssuesForSprint, updateIssueOrder } from "@/actions/issue";
 import { BarLoader } from "react-spinners";
 import IssueCard from "@/components/IssueCard";
 import { toast } from "sonner";
+import BoardFilters from "./BoardFilters";
 
 // Reorder index of issue card
 const reorder = (
@@ -44,7 +45,7 @@ export type SprintBoardProps<Type = Sprint> = {
 };
 
 const SprintBoard = ({ sprints, projectId, orgId }: SprintBoardProps) => {
-    const [currentSprint, setCurrentSprint] = useState<Sprint | undefined>(
+    const [currentSprint, setCurrentSprint] = useState<Sprint>(
         sprints.find((spr) => spr?.status === "ACTIVE") || sprints[0]
     );
 
@@ -71,7 +72,11 @@ const SprintBoard = ({ sprints, projectId, orgId }: SprintBoardProps) => {
         }
     }, [currentSprint?.id]);
 
+    // Filter change or search issue
     const [filteredIssues, setFilteredIssues] = useState(issues);
+    const handleFilterChange = (newFilterIssues = issues) => {
+        setFilteredIssues(newFilterIssues);
+    };
 
     // update issue order and status
     const {
@@ -135,7 +140,7 @@ const SprintBoard = ({ sprints, projectId, orgId }: SprintBoardProps) => {
             // remove card from the source list
             const [movedCard] = sourceList.splice(source.index, 1);
             // assign the new list id to the moved card
-            movedCard.status = destination.droppableId;
+            movedCard.status = destination.droppableId as IssueStatus;
 
             // add new card to the destination list
             destinationList.splice(destination.index, 0, movedCard);
@@ -150,7 +155,9 @@ const SprintBoard = ({ sprints, projectId, orgId }: SprintBoardProps) => {
             });
         }
 
-        const sortedIssues = newOrderedData.sort((a, b) => a.order - b.order);
+        const sortedIssues = newOrderedData.sort(
+            (a, b) => a.order - b.order
+        ) as Issue[];
         setIssues(sortedIssues);
 
         // Backend logic here
@@ -160,7 +167,7 @@ const SprintBoard = ({ sprints, projectId, orgId }: SprintBoardProps) => {
     if (issuesError) return <div>Error Loading issues</div>;
 
     return (
-        <div>
+        <>
             {/* Sprint Manager */}
             <SprintManager
                 sprint={currentSprint}
@@ -168,6 +175,14 @@ const SprintBoard = ({ sprints, projectId, orgId }: SprintBoardProps) => {
                 sprints={sprints}
                 projectId={projectId}
             />
+
+            {issues && !issueLoading && (
+                <BoardFilters
+                    issues={issues}
+                    onFilterChange={handleFilterChange}
+                />
+            )}
+
             {updateIssuesError && (
                 <p className="text-red-500 mt-2">{updateIssuesError.message}</p>
             )}
@@ -195,7 +210,7 @@ const SprintBoard = ({ sprints, projectId, orgId }: SprintBoardProps) => {
                                             </h3>
                                             {/* Issues */}
 
-                                            {issues
+                                            {filteredIssues
                                                 ?.filter(
                                                     (issue) =>
                                                         issue.status ===
@@ -237,10 +252,10 @@ const SprintBoard = ({ sprints, projectId, orgId }: SprintBoardProps) => {
                                                                         ) =>
                                                                             setIssues(
                                                                                 (
-                                                                                    issue
+                                                                                    issue: Issue
                                                                                 ) => {
                                                                                     if (
-                                                                                        issue.id ===
+                                                                                        issue?.id ===
                                                                                         updated.id
                                                                                     )
                                                                                         return updated;
@@ -288,7 +303,7 @@ const SprintBoard = ({ sprints, projectId, orgId }: SprintBoardProps) => {
                 onIssueCreate={handleIssueCreated}
                 orgId={orgId}
             />
-        </div>
+        </>
     );
 };
 

@@ -1,9 +1,9 @@
-"use client"
+"use client";
 import React, { useEffect, useState } from "react";
 import { SprintBoardProps } from "./SprintBoard";
 import { Sprint } from "@prisma/client";
 import { isAfter, isBefore, format, formatDistanceToNow } from "date-fns";
-// shadcn
+// shadcn import
 import {
     Select,
     SelectContent,
@@ -19,7 +19,7 @@ import { toast } from "sonner";
 import { BarLoader } from "react-spinners";
 
 type SprintManagerProps<Type> = {
-    sprint: Type ;
+    sprint: Type;
     setSprint: React.Dispatch<React.SetStateAction<Type | undefined>>;
 } & Pick<SprintBoardProps<Type>, "sprints" | "projectId">;
 
@@ -68,8 +68,8 @@ const SprintManager = <Type extends Sprint>({
             setStatus(updatedStatus.status);
             setSprint({
                 ...sprint,
-                status: updatedStatus.status
-            })
+                status: updatedStatus.status,
+            });
             toast.success("Sprint updated successfully ");
         }
     }, [updatedStatus, loading]);
@@ -90,7 +90,7 @@ const SprintManager = <Type extends Sprint>({
     const canEnd = status === "ACTIVE";
     return (
         <>
-            <div className="flex justify-between items-center gap-4">
+            <div className="flex flex-col md:flex-row justify-between items-center gap-4">
                 <Select
                     defaultValue={sprint.id}
                     onValueChange={handleSprintChange}
@@ -113,6 +113,7 @@ const SprintManager = <Type extends Sprint>({
 
                 {canStart && (
                     <Button
+                        className="w-full md:w-32"
                         onClick={() => handleStatusChange("ACTIVE")}
                         className="bg-green-900 text-white"
                         disabled={loading}
@@ -122,6 +123,7 @@ const SprintManager = <Type extends Sprint>({
                 )}
                 {canEnd && (
                     <Button
+                        className="w-full md:w-32"
                         onClick={() => handleStatusChange("COMPLETED")}
                         variant={"destructive"}
                         disabled={loading}

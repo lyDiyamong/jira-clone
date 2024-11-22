@@ -18,7 +18,7 @@ import {
 } from "@/components/ui/select";
 import { usePathname } from "next/navigation";
 import { Button } from "./ui/button";
-import { ExternalLink } from "lucide-react";
+import { CloudHail, ExternalLink } from "lucide-react";
 import useFetch from "@/hooks/use-fetch";
 import { deleteIssue, updateIssue } from "@/actions/issue";
 import { BarLoader } from "react-spinners";
@@ -71,12 +71,13 @@ const IssueDetailDialog = ({
 
     const handleStatusChange = async (newStatus: Issue["status"]) => {
         setStatus(newStatus);
-        updateIssueFn(issue.id, { status: newStatus, priority });
+        await updateIssueFn(issue.id, { status: newStatus, priority });
         router.refresh();
     };
     const handlePriorityChange = async (newPriority: Issue["priority"]) => {
         setPriority(newPriority);
-        updateIssueFn(issue.id, { priority: newPriority, status });
+        await updateIssueFn(issue.id, { priority: newPriority, status });
+        console.log(updatedData)
         router.refresh();
     };
 

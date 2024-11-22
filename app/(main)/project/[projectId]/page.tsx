@@ -17,7 +17,7 @@ const ProjectDetailPage = async ({
         notFound();
     }
     return (
-        <div className="container mx-auto ">
+        <>
             {/* Sprint Creation */}
             <SprintCreationForm
                 projectTitle={project?.name}
@@ -37,7 +37,7 @@ const ProjectDetailPage = async ({
             ) : (
                 <div>Create a Sprint from the button above</div>
             )}
-        </div>
+        </>
     );
 };
 

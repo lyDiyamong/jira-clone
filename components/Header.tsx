@@ -13,8 +13,8 @@ import UserLoading from "./UserLoading";
 async function Header() {
     await checkUser()
     return (
-        <header className="container mx-auto">
-            <nav className="py-6 px-4 flex justify-between items-center">
+        <header className="container mx-auto px-6">
+            <nav className="py-6 flex justify-between items-center">
                 <Link href="/">
                     <Image
                         src="/logo.png"

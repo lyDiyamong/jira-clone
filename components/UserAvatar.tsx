@@ -2,7 +2,7 @@
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { User } from "@prisma/client";
 
-const UserAvatar = ({ user }: { user: User }) => {
+const UserAvatar = ({ user }: { user: User  }) => {
     return (
         <div>
             <Avatar>
