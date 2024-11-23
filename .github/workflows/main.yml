@@ -1,61 +1,74 @@
 name: CI/CD Pipeline for Next.js
 
 on:
-  push:
-    branches:
-      - main
-  pull_request:
-    branches:
-      - main
+    push:
+        branches:
+            - main
+    pull_request:
+        branches:
+            - main
 
 jobs:
-  build:
-    runs-on: self-hosted # This runs the job on your self-hosted runner
-    steps:
-      # Step 1: Check out the code from the repository
-      - name: Checkout code
-        uses: actions/checkout@v3
+    # Build job
+    build:
+        runs-on: self-hosted # This runs the job on your self-hosted runner
+        steps:
+            # Step 1: Check out the code from the repository
+            - name: Checkout code
+              uses: actions/checkout@v3
 
-      # Step 2: Set up Node.js environment
-      - name: Set up Node.js
-        uses: actions/setup-node@v3
-        with:
-          node-version: "20" # specify the Node.js version you need
+            # Step 2: Set up Node.js environment
+            - name: Set up Node.js
+              uses: actions/setup-node@v3
+              with:
+                  node-version: "20" # specify the Node.js version you need
 
-      # Step 3: Install dependencies
-      - name: Install dependencies
-        run: |
-          npm install
+            # Step 3: Install dependencies
+            - name: Install dependencies
+              run: |
+                  npm install
 
-      # Step 4: Build the Next.js project
-      - name: Build project
-        run: |
-          npm run build
+            # Step 4: Build the Next.js project
+            - name: Build project
+              run: |
+                  npm run build
 
-      # Step 5: Transfer the entire project to the remote server
-      - name: Deploy to server
-        run: |
-          echo "$SSH_PRIVATE_KEY" > private_key.pem
-          chmod 400 private_key.pem
+    # Deploy job
+    deploy:
+        runs-on: self-hosted # Runs on your self-hosted runner
+        needs: build # This job will only run after the build job completes
+        steps:
+            # Step 1: Checkout the code (optional, in case deploy needs the latest code)
+            - name: Checkout code
+              uses: actions/checkout@v3
 
-          # Use scp to copy the entire project directory to the server
-          scp -i private_key.pem -r ./* ubuntu@$INSTANCE_IP:/home/ubuntu/
+            # Step 2: Set up SSH key for server access
+            - name: Set up SSH key
+              run: |
+                  echo "$SSH_PRIVATE_KEY" > private_key.pem
+                  chmod 400 private_key.pem
 
-      # Step 6: SSH into the server and start the application using PM2
-      - name: Start application with PM2
-        run: |
-          ssh -i private_key.pem ubuntu@$INSTANCE_IP << 'EOF'
-            cd /home/ubuntu/jira-clone
+            # Step 3: Deploy project to server
+            - name: Transfer project to server
+              run: |
+                  rsync -avz -e "ssh -i private_key.pem" ./jira-clone ubuntu@$INSTANCE_IP:/home/ubuntu/
 
-            # Install dependencies on the server (optional, only if needed)
-            npm install
+            # Step 4: SSH into the server and start the application using PM2
+            - name: Start application with PM2
+              run: |
+                  ssh -i private_key.pem ubuntu@$INSTANCE_IP << 'EOF'
+                    cd /home/ubuntu/jira-clone
 
-            # Start or restart application using PM2 (make sure PM2 is installed globally)
-            pm2 start npm --name "nextjs-app" -- run serve:pm2
+                    # Install dependencies on the server (optional, only if needed)
+                    npm install
 
-            # Optionally, restart Nginx if needed (if you're using Nginx as a reverse proxy)
-            sudo systemctl restart nginx
-          EOF
+                    # Start or restart application using PM2 (ensure PM2 is installed globally)
+                    pm2 start npm --name "nextjs-app" -- run serve:pm2
 
-    env:
-      SSH_PRIVATE_KEY: ${{ secrets.SSH_PRIVATE_KEY }}
+                    # Optionally, restart Nginx if needed (if you're using Nginx as a reverse proxy)
+                    sudo systemctl restart nginx
+                  EOF
+
+        env:
+            SSH_PRIVATE_KEY: ${{ secrets.SSH_PRIVATE_KEY }}
+            INSTANCE_IP: ${{ secrets.INSTANCE_IP }} # Make sure to set this in your GitHub secrets
