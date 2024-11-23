@@ -51,7 +51,7 @@ jobs:
             # Step 3: Deploy project to server
             - name: Transfer project to server
               run: |
-                  rsync -avz -e "ssh -i private_key.pem" ./jira-clone ubuntu@$INSTANCE_IP:/home/ubuntu/
+                  rsync -avz --exclude="private_key.pem" -e "ssh -i private_key.pem" ./jira-clone/ ubuntu@$INSTANCE_IP:/home/ubuntu/
 
             # Step 4: SSH into the server and start the application using PM2
             - name: Start application with PM2
@@ -63,7 +63,7 @@ jobs:
                     npm install
 
                     # Start or restart application using PM2 (ensure PM2 is installed globally)
-                    pm2 start npm --name "nextjs-app" -- run serve:pm2
+                    npm run serve:pm2
 
                     # Optionally, restart Nginx if needed (if you're using Nginx as a reverse proxy)
                     sudo systemctl restart nginx
