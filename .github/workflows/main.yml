@@ -1,95 +1,61 @@
-name: CI/CD Pipeline with Self-hosted Runner
+name: CI/CD Pipeline for Next.js
 
 on:
-    push:
-        branches:
-            - main
-    pull_request:
-        branches:
-            - main
+  push:
+    branches:
+      - main
+  pull_request:
+    branches:
+      - main
 
 jobs:
-    build:
-        runs-on: self-hosted # This runs the job on your self-hosted runner
-        steps:
-            # Step 1: Check out the code from the repository
-            - name: Checkout code
-              uses: actions/checkout@v3
+  build:
+    runs-on: self-hosted # This runs the job on your self-hosted runner
+    steps:
+      # Step 1: Check out the code from the repository
+      - name: Checkout code
+        uses: actions/checkout@v3
 
-            # Step 2: Set up Node.js (if using Node.js for Vite)
-            - name: Set up Node.js
-              uses: actions/setup-node@v3
-              with:
-                  node-version: "20" # specify the Node.js version you need
+      # Step 2: Set up Node.js environment
+      - name: Set up Node.js
+        uses: actions/setup-node@v3
+        with:
+          node-version: "20" # specify the Node.js version you need
 
-            # Step 3: Cache node_modules
-            - name: Cache node_modules
-              uses: actions/cache@v3
-              with:
-                  path: ./node_modules
-                  key: macos-node-modules-${{ hashFiles('**/package-lock.json') }}
-                  restore-keys: |
-                      macos-node-modules-
+      # Step 3: Install dependencies
+      - name: Install dependencies
+        run: |
+          npm install
 
-            # Step 4: Install dependencies
-            - name: Install dependencies
-              run: |
-                  npm install
+      # Step 4: Build the Next.js project
+      - name: Build project
+        run: |
+          npm run build
 
-            # Step 5: Build project (assuming using Vite)
-            - name: Build project
-              run: |
-                  npm run build
+      # Step 5: Transfer the entire project to the remote server
+      - name: Deploy to server
+        run: |
+          echo "$SSH_PRIVATE_KEY" > private_key.pem
+          chmod 400 private_key.pem
 
-            # Step 6: Upload build artifacts for the deploy job
-            - name: Upload build artifacts
-              uses: actions/upload-artifact@v3
-              with:
-                  name: dist
-                  path: ./dist # Path to the build output directory
+          # Use scp to copy the entire project directory to the server
+          scp -i private_key.pem -r ./* ubuntu@$INSTANCE_IP:/home/ubuntu/
 
-    deploy:
-        runs-on: self-hosted # This runs the deploy job on your self-hosted runner
-        needs: build # This job depends on the successful completion of the build job
-        timeout-minutes: 5
-        steps:
-            # Step 1: Download the build artifacts from the build job
-            - name: Download build artifacts
-              uses: actions/download-artifact@v3
-              with:
-                  name: dist
+      # Step 6: SSH into the server and start the application using PM2
+      - name: Start application with PM2
+        run: |
+          ssh -i private_key.pem ubuntu@$INSTANCE_IP << 'EOF'
+            cd /home/ubuntu/jira-clone
 
-            # Step 2: Set up SSH key for remote server access
-            - name: Set up SSH key
-              run: |
-                  echo "$SSH_PRIVATE_KEY" > private_key.pem
-                  chmod 400 private_key.pem
+            # Install dependencies on the server (optional, only if needed)
+            npm install
 
-            # # Step 3: Add server to known hosts
-            # - name: Add server to known hosts
-            #   run: |
-            #     mkdir -p ~/.ssh
-            #     echo "game.rothasamon.site ssh-rsa AAAAB3NzaC1yc2EAAAADAQABAAABgQDH9MqV8pZThJ3li/nuKV20aA8EF63ksZqlWX54eRwxY/0CVSJMRP0eMPU6L+gQ65joL5wJvMosJ0zcVNpJGZTRR5JphlpCudm2XotStBgEnDh9S66ibG6tK29RmQ+4XezAUD+6OCSPTfxJAPOV+iLH1HcgCVNtT6flpkIZLifOvcMKh2gczwkGt30SPOyEdXsDQWvv/sthAgUwqD1gloWzcayh6ZDIx8YVFse1r7FW4HPJmRxQB5mXV/z/FjZsLGXvXKm1ucuqRZqBfLqYJSAcF6DuT9TzJqD2Lj2/YtwqFGbhbi6LPmvhHTelzu0PcsK0ttc28dD3ScBNdb4tTj/PKwhdSumiiSZbkbS+vVnd3qRtv0+okE/NrhY+MCpsU1bGdPLSKYulvrqpDuYzn+0SxM46LTd3VeBtzX9dKFlupKIp+YYJicorpBAZ7GmHVdXcN0dMqn3wsNI5tSvQfScniLjRXCFPLfKYXfDuSwiSGNXA06dhuPEyk7kewrxguG0=" >> ~/.ssh/known_hosts
-            #     echo "game.rothasamon.site ecdsa-sha2-nistp256 AAAAE2VjZHNhLXNoYTItbmlzdHAyNTYAAAAIbmlzdHAyNTYAAABBBLSrIwc3+EYyIZqnW9IvLwb+/xqX1dWuqGWjqd0UsMOvVyxwoUsASCUHstIj9XolnM2D92oe+UR0reJfMTEypN4=" >> ~/.ssh/known_hosts
-            #     echo "game.rothasamon.site ssh-ed25519 AAAAC3NzaC1lZDI1NTE5AAAAIIZrYKZHHvW19+fOoD+2KQUQgZiSRuZ4y8p8VcAFnXjM" >> ~/.ssh/known_hosts
+            # Start or restart application using PM2 (make sure PM2 is installed globally)
+            pm2 start npm --name "nextjs-app" -- run serve:pm2
 
-            # Step 4: Delete old dist directory and copy new dist files to server
-            - name: Delete old dist directory and copy new dist files to server
-              run: |
-                  # SSH into the server and delete the old dist folder
-                  ssh -i private_key.pem ubuntu@game.rothasamon.site << 'EOF'
-                    # Delete the old dist folder
-                    rm -rf /home/ubuntu/dist/*
-                  EOF
+            # Optionally, restart Nginx if needed (if you're using Nginx as a reverse proxy)
+            sudo systemctl restart nginx
+          EOF
 
-                  # Now copy the new dist directory to the remote server
-                  scp -i private_key.pem -r ./dist/* ubuntu@game.rothasamon.site:/home/ubuntu/dist
-
-            # Step 5: Restart Nginx to apply changes
-            - name: Restart Nginx to apply changes
-              run: |
-                  ssh -i private_key.pem ubuntu@game.rothasamon.site "sudo systemctl restart nginx"
-
-        # Set the environment variables (the SSH private key is stored securely in GitHub Secrets)
-        env:
-            SSH_PRIVATE_KEY: ${{ secrets.SSH_PRIVATE_KEY }}
+    env:
+      SSH_PRIVATE_KEY: ${{ secrets.SSH_PRIVATE_KEY }}
