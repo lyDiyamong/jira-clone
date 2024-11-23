@@ -51,7 +51,7 @@ jobs:
             # Step 3: Deploy project to server
             - name: Transfer project to server
               run: |
-                  rsync -avz --exclude="private_key.pem" -e "ssh -i private_key.pem" ./jira-clone/ ubuntu@$INSTANCE_IP:/home/ubuntu/
+                  rsync -avz --exclude="private_key.pem" -e "ssh -i private_key.pem" ../jira-clone ubuntu@$INSTANCE_IP:/home/ubuntu/
 
             # Step 4: SSH into the server and start the application using PM2
             - name: Start application with PM2
