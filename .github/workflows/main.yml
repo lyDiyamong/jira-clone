@@ -56,7 +56,7 @@ jobs:
             # Step 4: SSH into the server and start the application using PM2
             - name: Start application with PM2
               run: |
-                  ssh -i private_key.pem ubuntu@$INSTANCE_IP << 'EOF'
+                  ssh -t -i private_key.pem ubuntu@$INSTANCE_IP << 'EOF'
                     cd /home/ubuntu/jira-clone
 
                     # Install dependencies on the server (optional, only if needed)
