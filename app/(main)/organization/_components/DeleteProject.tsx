@@ -41,10 +41,10 @@ const DeleteProject = ({ projectId }: { projectId: string }) => {
         <>
             <Button
                 className={`${loading ? "animate-pulse" : ""}`}
-                size="sm"
+                size="icon"
                 onClick={handleDelete}
             >
-                <TrashIcon className="size-4" />
+                <TrashIcon />
             </Button>
             {error && <p className="text-red-500 text-sm">{error.message}</p>}
         </>
