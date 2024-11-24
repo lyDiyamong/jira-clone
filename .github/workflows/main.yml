@@ -11,61 +11,89 @@ on:
 jobs:
     # Build job
     build:
-        runs-on: self-hosted # This runs the job on your self-hosted runner
+        runs-on: self-hosted
         steps:
-            # Step 1: Check out the code from the repository
+            # Step 1: Check out the code
             - name: Checkout code
               uses: actions/checkout@v3
 
-            # Step 2: Set up Node.js environment
+            # Step 2: Set up Node.js
             - name: Set up Node.js
               uses: actions/setup-node@v3
               with:
-                  node-version: "20" # specify the Node.js version you need
+                  node-version: "20"
 
             # Step 3: Install dependencies
             - name: Install dependencies
-              run: |
-                  npm install
+              run: npm install --legacy-peer-deps
 
             # Step 4: Build the Next.js project
             - name: Build project
-              run: |
-                  npm run build
+              run: npm run build
+
+            # Step 5: Archive the build files
+            - name: Archive build files
+              run: tar -czf build.tar.gz .next public package.json package-lock.json
+
+            # Save the artifact for the deploy job
+            - name: Upload artifact
+              uses: actions/upload-artifact@v3
+              with:
+                  name: build-files
+                  path: build.tar.gz
 
     # Deploy job
     deploy:
-        runs-on: self-hosted # Runs on your self-hosted runner
-        needs: build # This job will only run after the build job completes
+        runs-on: self-hosted
+        needs: build
         steps:
-            # Step 1: Checkout the code (optional, in case deploy needs the latest code)
-            - name: Checkout code
-              uses: actions/checkout@v3
+            # Step 1: Download the artifact
+            - name: Download artifact
+              uses: actions/download-artifact@v3
+              with:
+                  name: build-files
 
-            # Step 2: Set up SSH key for server access
+            # Step 2: Set up SSH key
             - name: Set up SSH key
               run: |
                   echo "$SSH_PRIVATE_KEY" > private_key.pem
                   chmod 400 private_key.pem
 
-            # Step 3: Deploy project to server
+            # Step 3: Transfer project to server
             - name: Transfer project to server
               run: |
-                  rsync -avz --exclude="private_key.pem" -e "ssh -i private_key.pem" ../jira-clone ubuntu@$INSTANCE_IP:/home/ubuntu/
+                  scp -i private_key.pem build.tar.gz ubuntu@$INSTANCE_IP:/home/ubuntu/jira-clone.tar.gz
 
-            # Step 4: SSH into the server and start the application using PM2
-            - name: Start application with PM2
+            # Step 4: Deploy and start application on server
+            - name: Deploy application
               run: |
-                  ssh -t -i private_key.pem ubuntu@$INSTANCE_IP << 'EOF'
-                    cd /home/ubuntu/jira-clone
+                  ssh -i private_key.pem ubuntu@$INSTANCE_IP << 'EOF'
+                    set -e
 
-                    npm install
+                    # Go to the deployment directory
+                    cd /home/ubuntu
 
+                    # Clean previous builds
+                    rm -rf jira-clone
+                    mkdir jira-clone
+
+                    # Extract new build
+                    tar -xzf jira-clone.tar.gz -C jira-clone
+                    rm jira-clone.tar.gz
+
+                    # Install dependencies and start app
+                    cd jira-clone
+                    npm install --production --legacy-peer-deps
                     npm run serve:pm2
 
+                    # Restart Nginx
                     sudo systemctl restart nginx
                   EOF
 
+            # Step 5: Clean up the SSH key
+            - name: Remove SSH key
+              run: rm private_key.pem
+
         env:
             SSH_PRIVATE_KEY: ${{ secrets.SSH_PRIVATE_KEY }}
-            INSTANCE_IP: ${{ secrets.INSTANCE_IP }} # Make sure to set this in your GitHub secrets
+            INSTANCE_IP: ${{ secrets.INSTANCE_IP }}
