@@ -59,7 +59,8 @@ jobs:
                     # Start the app using PM2
                     npm run serve:pm2
 
-                    # Restart Nginx
+                    # Restart PM2 & Nginx
+                    pm2 restart jira-clone
                     sudo systemctl restart nginx
                   EOF
 
