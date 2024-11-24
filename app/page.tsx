@@ -13,7 +13,7 @@ export default function Home() {
             {/* Hero Section */}
             <section className="container mx-auto py-20 text-center">
                 <h1 className="text-6xl sm:text-7xl lg:text-8xl font-extrabold gradient-title pb-6 flex flex-col">
-                    Streamline Your Work flow <br />
+                    Test CI/CD Your Work flow <br />
                     <span className="flex mx-auto gap-3 sm:gap-4 items-center">
                         with{" "}
                         <Image
