@@ -31,70 +31,42 @@ jobs:
             - name: Build project
               run: npm run build
 
-            # Step 5: Archive the build files
-            - name: Archive build files
-              run: tar -czf build.tar.gz .next public package.json package-lock.json
-
-            # Save the artifact for the deploy job
-            - name: Upload artifact
-              uses: actions/upload-artifact@v3
-              with:
-                  name: build-files
-                  path: build.tar.gz
-
     # Deploy job
     deploy:
         runs-on: self-hosted
         needs: build
         steps:
-            # Step 1: Download the artifact
-            - name: Download artifact
-              uses: actions/download-artifact@v3
-              with:
-                  name: build-files
-
-            # Step 2: Set up SSH key
+            # Step 1: Set up SSH key
             - name: Set up SSH key
               run: |
                   echo "$SSH_PRIVATE_KEY" > private_key.pem
                   chmod 400 private_key.pem
 
-            # Step 3: Transfer project to server
-            - name: Transfer project to server
+            # Step 2: Transfer the entire project to the server, excluding node_modules
+            - name: Transfer project to the server
               run: |
-                  scp -i private_key.pem build.tar.gz ubuntu@$INSTANCE_IP:/home/ubuntu/jira-clone.tar.gz
+                  rsync -av --exclude "node_modules" --exclude "*.log" -e "ssh -i private_key.pem" ./ ubuntu@$INSTANCE_IP:/home/ubuntu/jira-clone/
 
-            # Step 4: Deploy and start application on server
+            # Step 3: Deploy and start the application on the server
             - name: Deploy application
               run: |
                   ssh -i private_key.pem ubuntu@$INSTANCE_IP << 'EOF'
                     set -e
 
                     # Go to the deployment directory
-                    cd /home/ubuntu
+                    cd /home/ubuntu/jira-clone
 
-                    # Clean previous builds
-                    rm -rf jira-clone
-                    mkdir jira-clone
-
-                    # Extract new build
-                    tar -xzf jira-clone.tar.gz -C jira-clone
-                    rm jira-clone.tar.gz
-
-                    # Install dependencies and start app
-                    cd jira-clone
-                    npm install --production --legacy-peer-deps
+                    # Start the app using PM2
                     npm run serve:pm2
 
                     # Restart Nginx
                     sudo systemctl restart nginx
                   EOF
 
-            # Step 5: Clean up the SSH key
+            # Step 4: Clean up the SSH key
             - name: Remove SSH key
               run: rm private_key.pem
 
         env:
             SSH_PRIVATE_KEY: ${{ secrets.SSH_PRIVATE_KEY }}
             INSTANCE_IP: ${{ secrets.INSTANCE_IP }}
-# 1
